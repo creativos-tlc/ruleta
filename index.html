@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Ruleta de Colores</title>
+<style>
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    background: #1b1b1f;
+    color: #f2f2f2;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    overflow-x: hidden;
+  }
+  body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 24px 16px;
+    gap: 20px;
+  }
+  h1 {
+    font-size: 1.4rem;
+    margin: 0;
+    text-align: center;
+  }
+  .wheel-wrap {
+    position: relative;
+    width: min(85vw, 380px);
+    height: min(85vw, 380px);
+  }
+  .pointer {
+    position: absolute;
+    top: -14px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 0;
+    border-left: 16px solid transparent;
+    border-right: 16px solid transparent;
+    border-top: 28px solid #f2f2f2;
+    z-index: 5;
+    filter: drop-shadow(0 2px 3px rgba(0,0,0,.4));
+  }
+  .wheel {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    position: relative;
+    box-shadow: 0 0 0 8px #2a2a30, 0 8px 24px rgba(0,0,0,.5);
+    transition: transform 5.5s cubic-bezier(0.12, 0.67, 0.1, 1);
+  }
+  .hub {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 18%;
+    height: 18%;
+    background: #2a2a30;
+    border: 3px solid #f2f2f2;
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 4;
+  }
+  button {
+    font-size: 1.1rem;
+    font-weight: 600;
+    padding: 14px 40px;
+    border-radius: 999px;
+    border: none;
+    background: #f2f2f2;
+    color: #1b1b1f;
+    cursor: pointer;
+    touch-action: manipulation;
+  }
+  button:active { transform: scale(0.97); }
+  button:disabled { opacity: .5; }
+  #result {
+    min-height: 2.2rem;
+    font-size: 1.3rem;
+    font-weight: 700;
+    text-align: center;
+  }
+</style>
+</head>
+<body>
+
+<h1>🎡 Ruleta de Colores</h1>
+
+<div class="wheel-wrap">
+  <div class="pointer"></div>
+  <div class="hub"></div>
+  <div class="wheel" id="wheel"></div>
+</div>
+
+<div id="result">Toca girar para empezar</div>
+<button id="spinBtn">Girar</button>
+
+<script>
+const colores = [
+  { nombre: "Asfalto",        color: "#4A4A4A" },
+  { nombre: "Concreto",       color: "#9B9B93" },
+  { nombre: "Ladrillo",       color: "#B5533C" },
+  { nombre: "Óxido",          color: "#C1440E" },
+  { nombre: "Semáforo Rojo",  color: "#E63946" },
+  { nombre: "Semáforo Amarillo", color: "#F4C430" },
+  { nombre: "Semáforo Verde", color: "#2A9D8F" },
+  { nombre: "Taxi",           color: "#FFC300" },
+  { nombre: "Buzón",          color: "#D62828" },
+  { nombre: "Cielo",          color: "#4A90D9" },
+  { nombre: "Atardecer",      color: "#FF8C42" },
+  { nombre: "Jacarandá",      color: "#9370DB" },
+  { nombre: "Grafiti Rosa",   color: "#E4569E" },
+  { nombre: "Pasto de Plaza", color: "#6B8E23" },
+  { nombre: "Cobre",          color: "#B87333" },
+  { nombre: "Latón",          color: "#C9A227" },
+  { nombre: "Vidrio",         color: "#4682B4" },
+  { nombre: "Línea Metro Roja", color: "#C0392B" },
+  { nombre: "Línea Metro Azul", color: "#2980B9" },
+  { nombre: "Farol de Sodio", color: "#FFB347" }
+];
+
+const n = colores.length;
+const slice = 360 / n;
+const wheel = document.getElementById("wheel");
+const spinBtn = document.getElementById("spinBtn");
+const result = document.getElementById("result");
+
+// Construye el fondo cónico con los N colores
+const stops = colores.map((c, i) => `${c.color} ${i * slice}deg ${(i + 1) * slice}deg`).join(", ");
+wheel.style.background = `conic-gradient(${stops})`;
+
+let currentRotation = 0;
+
+spinBtn.addEventListener("click", () => {
+  spinBtn.disabled = true;
+  result.textContent = "Girando...";
+
+  const targetIndex = Math.floor(Math.random() * n);
+  // Ángulo del centro del segmento elegido
+  const segmentCenter = targetIndex * slice + slice / 2;
+  // Vueltas completas extra para que tarde en detenerse
+  const extraSpins = 6 + Math.floor(Math.random() * 3); // 6 a 8 vueltas
+  // El puntero apunta hacia arriba (0deg); para que el segmento quede ahí
+  // hay que rotar de forma que (360 - segmentCenter) quede arriba, sumando vueltas.
+  const targetAngle = 360 * extraSpins + (360 - segmentCenter);
+
+  currentRotation += targetAngle;
+  wheel.style.transform = `rotate(${currentRotation}deg)`;
+
+  const onEnd = () => {
+    wheel.removeEventListener("transitionend", onEnd);
+    result.textContent = colores[targetIndex].nombre;
+    spinBtn.disabled = false;
+  };
+  wheel.addEventListener("transitionend", onEnd);
+});
+</script>
+
+</body>
+</html>
